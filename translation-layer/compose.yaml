@@ -1,0 +1,7 @@
+services:
+  translation-layer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: translation-layer-ecog
+    container_name: translation-layer-test

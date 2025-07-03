@@ -1,0 +1,7 @@
+services:
+  kiosk-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kiosk-app
+    container_name: kiosk-app-test

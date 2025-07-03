@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",          // or "NodeNext"
+    "target": "ES2020",          // or newer
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "outDir": "./dist"
+  }
+}

@@ -1,0 +1,22 @@
+services:
+  kiosk-app:
+    build: ../kiosk-server/.
+    image: kiosk-app
+    container_name: kiosk-app-test
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+  translation-layer:
+    build: ../translation-layer/.
+    image: translation-layer-ecog 
+    container_name: translation-layer-test
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

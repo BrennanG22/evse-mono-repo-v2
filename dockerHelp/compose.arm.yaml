@@ -1,0 +1,25 @@
+services:
+  kiosk-app:
+    platform: linux/arm/v7
+    build: 
+      context: ../kiosk-server/.
+    image: jbgiroux/kiosk-app:arm-v7
+    container_name: kiosk-app-test
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+  translation-layer:
+    platform: linux/arm/v7
+    build: ../translation-layer/.
+    image: jbgiroux/translation-layer-ecog:arm-v7
+    container_name: translation-layer-test
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

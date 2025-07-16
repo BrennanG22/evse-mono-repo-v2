@@ -1,0 +1,32 @@
+{
+  "configurations": [
+    {
+      "name": "Win32-WSL-Manual",
+      "includePath": [
+        "\\\\wsl$\\Ubuntu\\usr\\include\\gtk-4.0",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\pango-1.0",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\glib-2.0",
+        "\\\\wsl$\\Ubuntu\\usr\\lib\\x86_64-linux-gnu\\glib-2.0\\include",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\harfbuzz",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\freetype2",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\libpng16",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\libmount",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\blkid",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\fribidi",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\cairo",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\pixman-1",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\gdk-pixbuf-2.0",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\x86_64-linux-gnu",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\webp",
+        "\\\\wsl$\\Ubuntu\\usr\\include\\graphene-1.0",
+        "\\\\wsl$\\Ubuntu\\usr\\lib\\x86_64-linux-gnu\\graphene-1.0\\include"
+      ],
+      "defines": [],
+      "compilerPath": "C:/Windows/System32/wsl.exe",
+      "cStandard": "gnu11",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "windows-gcc-x64"
+    }
+  ],
+  "version": 4
+}

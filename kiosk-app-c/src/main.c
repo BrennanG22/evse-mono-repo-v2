@@ -1,8 +1,11 @@
 #include "main.h"
 #include "screens/home_screen.h"
 
-#define DISPLAY_WIDTH 500
-#define DISPLAY_HEIGHT 500
+#define DISPLAY_WIDTH 720 
+#define DISPLAY_HEIGHT 1280
+#define SCALE_FACTOR 0.8
+
+
 
 // Button callback to switch screen
 static void on_nav_button_clicked(GtkButton *button, gpointer user_data)
@@ -68,8 +71,16 @@ static void activate(GtkApplication *gtk_app)
   // Create main window
   app->window = gtk_application_window_new(gtk_app);
   gtk_window_set_title(GTK_WINDOW(app->window), "EV State Machine");
-  gtk_window_set_default_size(GTK_WINDOW(app->window), DISPLAY_WIDTH, DISPLAY_HEIGHT);
-  gtk_window_set_resizable(GTK_WINDOW(app->window), FALSE);
+  gtk_window_set_default_size(GTK_WINDOW(app->window), (DISPLAY_WIDTH*SCALE_FACTOR), (DISPLAY_HEIGHT*SCALE_FACTOR));
+  // gtk_window_set_resizable(GTK_WINDOW(app->window), FALSE);
+
+  GtkCssProvider *css = gtk_css_provider_new();
+  gtk_css_provider_load_from_path(css, "styles/style.css");
+
+  gtk_style_context_add_provider_for_display(
+      gdk_display_get_default(),
+      GTK_STYLE_PROVIDER(css),
+      GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
   // Create the GtkStack container
   app->stack = GTK_STACK(gtk_stack_new());
@@ -90,6 +101,7 @@ static void activate(GtkApplication *gtk_app)
 
   // Set up Vbox
   GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
+  gtk_widget_set_name(vbox, "root");
 
   gtk_box_append(GTK_BOX(vbox), gtk_label_new("Test"));
 

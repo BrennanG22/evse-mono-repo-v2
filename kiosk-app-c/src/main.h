@@ -3,9 +3,6 @@
 
 #include <gtk/gtk.h>
 
-// Constants
-#define DISPLAY_WIDTH  500
-#define DISPLAY_HEIGHT 500
 
 // Application states
 typedef enum {

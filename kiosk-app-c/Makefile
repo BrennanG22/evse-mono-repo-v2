@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS := -Wall -Wextra -Werror -Wreturn-type $(shell pkg-config --cflags gtk4)
 LDFLAGS = `pkg-config --libs gtk4`
 SRC := $(shell find src -name '*.c')
-OUT = out/your_program
+OUT = out/app
 
 all: $(OUT)
 

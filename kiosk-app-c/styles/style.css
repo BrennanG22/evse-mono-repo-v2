@@ -1,0 +1,20 @@
+#main-box {
+  background-color: black;
+}
+
+#root {
+  transform: scale(1);
+  transform-origin: top left;
+}
+
+.debug-background{
+  background-color: red;
+}
+
+.border-right{
+  border-right:2px
+}
+
+.border-left{
+  border-left:2px
+}

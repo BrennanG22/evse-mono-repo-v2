@@ -17,6 +17,7 @@ export default class ServerInterface {
         }
 
         if (parsedData.command === "register" && parsedData.data === "random") {
+          console.log("Registered")
           const sendInterval = setInterval(() => {
             const dummyData = {
               canStartCharge: true,

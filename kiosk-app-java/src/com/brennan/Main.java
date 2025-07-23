@@ -3,6 +3,8 @@ package com.brennan;
 import javax.swing.*;
 
 import com.brennan.datastate.EVSEDataState;
+import com.brennan.evse.ECOGInterface;
+import com.brennan.evse.EVSEComunaction;
 import com.brennan.gui.screen.ScreenHost;
 import com.brennan.gui.screen.ScreenProvider;
 
@@ -24,6 +26,13 @@ public class Main {
 
     final boolean isDevelopmentMode = devModeFlag;
 
+    try {
+      EVSEComunaction comunactionInterface = new ECOGInterface();
+      comunactionInterface.setDataState(evseDataState);
+    } catch (Exception e) {
+
+    }
+
     SwingUtilities.invokeLater(() -> {
 
       ScreenProvider screenProvider = new ScreenProvider();
@@ -35,8 +44,10 @@ public class Main {
       Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
       screenHost.setPreferredSize(screenSize);
 
-      screenHost.setActiveScreen(screenProvider.getTestScreen(
-          screenHost, evseDataState));
+      // screenHost.setActiveScreen(screenProvider.getTestScreen(
+      // screenHost, evseDataState));
+
+      screenHost.setActiveScreen(screenProvider.getChargeStateScreen(evseDataState));
 
       frame.setContentPane(screenHost);
       if (isDevelopmentMode) {

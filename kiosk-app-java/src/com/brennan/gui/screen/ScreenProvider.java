@@ -4,24 +4,36 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
 
 import org.apache.batik.swing.JSVGCanvas;
 
 import com.brennan.datastate.EVSEDataState;
-import com.brennan.gui.components.ImagePanel;
-import com.brennan.gui.components.RoundedButton;
+import com.brennan.gui.components.*;
+import com.formdev.flatlaf.FlatLightLaf;
 
 /*
  * Provides the screens for the GUI
@@ -100,7 +112,7 @@ public class ScreenProvider {
 
     JSVGCanvas leftImage = new JSVGCanvas();
     leftImage.setURI(getClass().getResource("/assets/contactless.svg").toString());
-    
+
     ImagePanel rightImage = new ImagePanel("/assets/electric_car.svg");
 
     indicatorPanel.add(leftImage);
@@ -131,6 +143,121 @@ public class ScreenProvider {
     panel.add(btnWrapper, BorderLayout.SOUTH);
 
     return panel;
+  }
+
+  public Screen getChargeStateScreen(EVSEDataState state) {
+
+    try {
+      UIManager.setLookAndFeel(new FlatLightLaf());
+    } catch (Exception ex) {
+      System.err.println("Failed to initialize LaF");
+    }
+    Screen panel = new Screen();
+    JPanel root = new JPanel();
+    root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
+    root.setBackground(Color.WHITE);
+    root.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+    // SOC Progress Circle Area
+    root.add(RoundProgressBar.createSOCSection());
+
+    // Three-column metrics section
+    root.add(createMetricsRow(state));
+
+    // Bottom buttons
+    root.add(Box.createVerticalStrut(20));
+    root.add(createButtonRow());
+
+    panel.add(root);
+    return panel;
+  }
+
+  static class ReadoutBox extends JPanel {
+    private final JTextArea textArea;
+    private final Color paintColor;
+    private BufferedImage backgroundCache;
+    private Dimension lastSize;
+    private Color lastColor;
+
+    public ReadoutBox(String text, Color paintColor) {
+      this.paintColor = paintColor;
+      setLayout(new BorderLayout());
+      setOpaque(false);
+
+      textArea = new JTextArea(text);
+      textArea.setLineWrap(true);
+      textArea.setWrapStyleWord(true);
+      textArea.setEditable(false);
+      textArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+      textArea.setOpaque(false); // Let background show through
+      textArea.setForeground(Color.DARK_GRAY);
+      textArea.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+      add(textArea, BorderLayout.CENTER);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+      Dimension size = getSize();
+      if (backgroundCache == null || !size.equals(lastSize) || !paintColor.equals(lastColor)) {
+        backgroundCache = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = backgroundCache.createGraphics();
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(paintColor);
+        g2.fillRoundRect(0, 0, size.width, size.height, 20, 20);
+        g2.dispose();
+
+        lastSize = size;
+        lastColor = paintColor;
+      }
+
+      g.drawImage(backgroundCache, 0, 0, null);
+      super.paintComponent(g);
+    }
+  }
+
+  private JPanel createMetricsRow(EVSEDataState state) {
+    JPanel row = new JPanel(new GridLayout(1, 3, 15, 0));
+    row.setMaximumSize(new Dimension(800, 150));
+    row.setOpaque(false);
+
+    row.add(buildColumn("Connection", new MetricBox("Status", "Online", "")));
+    row.add(buildColumn("Voltage / Current", new MetricBox("Voltage", "410", "V"),
+        new MetricBox("Current", "32", "A"),
+        new MetricBox<Float>("Power", state.power, "kW")));
+    row.add(buildColumn("Timing", new MetricBox("Time to Bulk", "00:40:30", ""),
+        new MetricBox("Estimated TOD", "12:30", "")));
+    return row;
+  }
+
+  private JPanel buildColumn(String title, JComponent... children) {
+    JPanel col = new JPanel();
+    col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+    col.setOpaque(false);
+    col.add(new JLabel("<html><h2>" + title + "</h2></html>"));
+    for (JComponent c : children) {
+      col.add(Box.createVerticalStrut(5));
+      col.add(c);
+    }
+    return col;
+  }
+
+  private JPanel createButtonRow() {
+    JPanel row = new JPanel(new GridLayout(1, 2, 20, 0));
+    row.setMaximumSize(new Dimension(800, 80));
+
+    JButton startBtn = new JButton("Start Charging");
+    startBtn.setBackground(new Color(0x4CAF50)); // Green
+    startBtn.setForeground(Color.WHITE);
+
+    JButton stopBtn = new JButton("Stop Charging");
+    stopBtn.setBackground(new Color(0xF44336)); // Red
+    stopBtn.setForeground(Color.WHITE);
+
+    row.add(startBtn);
+    row.add(stopBtn);
+    return row;
   }
 
 }

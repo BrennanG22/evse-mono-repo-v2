@@ -47,12 +47,12 @@ public class Main {
       // screenHost.setActiveScreen(screenProvider.getTestScreen(
       // screenHost, evseDataState));
 
-      screenHost.setActiveScreen(screenProvider.getChargeStateScreen(evseDataState));
+      screenHost.setActiveScreen(screenProvider.getChargeStateA());
 
       frame.setContentPane(screenHost);
       if (isDevelopmentMode) {
         // Windowed mode for debugging
-        frame.setSize(800, 600); // Or whatever dev size you want
+        frame.setSize(500, 700); // Or whatever dev size you want
         frame.setLocationRelativeTo(null); // Center on screen
         frame.setVisible(true);
       } else {

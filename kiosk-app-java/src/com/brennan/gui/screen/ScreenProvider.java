@@ -7,11 +7,15 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.util.concurrent.Flow;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -170,6 +174,54 @@ public class ScreenProvider {
 
     panel.add(root);
     return panel;
+  }
+
+  public Screen getChargeStateA() {
+    Screen mainPanel = new Screen();
+    mainPanel.setLayout(new GridBagLayout());
+    GridBagConstraints constraints = new GridBagConstraints();
+    constraints.weightx = 1;
+    constraints.insets = new Insets(10, 10, 10, 10);
+
+
+    constraints.gridx = 0;
+    constraints.gridy = 0;
+    constraints.weighty = 1;
+    constraints.anchor = GridBagConstraints.CENTER;
+    constraints.fill = GridBagConstraints.HORIZONTAL;
+
+    mainPanel.add(RoundProgressBar.createSOCSection(), constraints);
+
+    JPanel statsPanel = new JPanel();
+    statsPanel.add(new MetricBox<>("Test", "Test", "Test"));
+
+    statsPanel.setOpaque(true);
+    statsPanel.setBackground(Color.LIGHT_GRAY);
+
+    constraints.gridy = 1;
+    constraints.fill = GridBagConstraints.NONE;
+    constraints.anchor = GridBagConstraints.CENTER;
+    constraints.weighty = 1;
+
+
+    mainPanel.add(statsPanel, constraints);
+
+    constraints.fill = GridBagConstraints.HORIZONTAL;
+
+    JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 60, 0));
+    btnPanel.add(new RoundedButton("Test1", true, null,
+        new Color(20, 180, 50), new Color(20, 150, 50),
+        new Color(110, 110, 110)));
+    btnPanel.setOpaque(true); // To help visually debug
+    btnPanel.setBackground(Color.LIGHT_GRAY); // See if spacing shows up
+    btnPanel.add(new JButton("Test2"));
+    
+    constraints.gridy = 2;
+    constraints.weighty = 0.1;
+
+    mainPanel.add(btnPanel, constraints);
+
+    return mainPanel;
   }
 
   static class ReadoutBox extends JPanel {

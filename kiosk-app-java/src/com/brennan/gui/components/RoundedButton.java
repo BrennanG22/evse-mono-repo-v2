@@ -48,7 +48,7 @@ public class RoundedButton extends JButton {
     setContentAreaFilled(false); // Disable default background painting
     setBorderPainted(false);
     setForeground(Color.WHITE);
-    setFont(new Font("Segoe UI", Font.BOLD, 14));
+    // setFont(new Font("Segoe UI", Font.BOLD, 14));
     setUI(new BasicButtonUI());
 
     addListeners();

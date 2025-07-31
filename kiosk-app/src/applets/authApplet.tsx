@@ -37,7 +37,7 @@ export default function AuthApplet({ setStateHook, data }: AuthAppletProps) {
         </div>
       </div>
       <div className='space-x-2 mt-10'>
-        <button className={`${canProceed?'active-green-button':'disabled-grey-button'} w-40`} disabled={!canProceed} onClick={() => { setStateHook(2) }}>Next</button>
+        <button className={`${canProceed?'active-green-button':'disabled-grey-button'} w-40`} disabled={canProceed} onClick={() => { setStateHook(2) }}>Next</button>
         <button className='active-red-button w-40' onClick={() => { setStateHook(0) }}>Cancel</button>
       </div>
     </div>

@@ -126,7 +126,7 @@ public class ScreenProvider {
 
     // ----- Bottom: Buttons -----
     RoundedButton nextButton = new RoundedButton(
-        "Next", true, null,
+        "Next", true, () -> screenHost.setActiveScreen(this.getChargeStateA(state, screenHost)),
         new Color(30, 180, 50), new Color(30, 120, 50), new Color(70, 70, 70));
     nextButton.setPreferredSize(new Dimension(150, 60));
 
@@ -176,13 +176,12 @@ public class ScreenProvider {
     return panel;
   }
 
-  public Screen getChargeStateA() {
+  public Screen getChargeStateA(EVSEDataState state, ScreenHost screenHost) {
     Screen mainPanel = new Screen();
     mainPanel.setLayout(new GridBagLayout());
     GridBagConstraints constraints = new GridBagConstraints();
     constraints.weightx = 1;
     constraints.insets = new Insets(10, 10, 10, 10);
-
 
     constraints.gridx = 0;
     constraints.gridy = 0;
@@ -192,8 +191,40 @@ public class ScreenProvider {
 
     mainPanel.add(RoundProgressBar.createSOCSection(), constraints);
 
-    JPanel statsPanel = new JPanel();
-    statsPanel.add(new MetricBox<>("Test", "Test", "Test"));
+    JPanel statsPanel = new JPanel(new GridLayout(1, 3, 5 , 0));
+
+    JPanel statsBoxA = new JPanel(new BorderLayout());
+    JPanel statsBoxB = new JPanel(new GridBagLayout());
+    JPanel statsBoxC = new JPanel(new GridLayout(2, 1));
+
+    statsBoxA.add(new JLabel("Connection"));
+
+    GridBagConstraints temp = new GridBagConstraints();
+    temp.fill = GridBagConstraints.HORIZONTAL;
+    temp.gridx = 0;
+    temp.gridy = 0;
+    temp.weighty = 0.5;
+    temp.weightx = 0.5;
+    temp.gridwidth = 1;
+
+    statsBoxB.add(new MetricBox<>("Voltage", state.voltage, "V"), temp);
+
+    temp.gridx = 1;
+
+    statsBoxB.add(new MetricBox<>("Current", state.current, "A"), temp);
+
+    temp.gridx = 0;
+    temp.gridy = 1;
+    temp.weightx = 1;
+    temp.gridwidth = 2;
+    statsBoxB.add(new MetricBox<>("Power", state.power, "kW"), temp);
+
+    statsBoxC.add(new MetricBox<>("Time to Bulk", "00:00:00", ""));
+    statsBoxC.add(new MetricBox<>("Estimated TOD", "00:00:00", ""));
+
+    statsPanel.add(statsBoxA);
+    statsPanel.add(statsBoxB);
+    statsPanel.add(statsBoxC);
 
     statsPanel.setOpaque(true);
     statsPanel.setBackground(Color.LIGHT_GRAY);
@@ -203,19 +234,35 @@ public class ScreenProvider {
     constraints.anchor = GridBagConstraints.CENTER;
     constraints.weighty = 1;
 
-
     mainPanel.add(statsPanel, constraints);
 
     constraints.fill = GridBagConstraints.HORIZONTAL;
 
-    JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 60, 0));
-    btnPanel.add(new RoundedButton("Test1", true, null,
+    JPanel btnPanel = new JPanel(new GridBagLayout());
+
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.fill = GridBagConstraints.BOTH;
+    gbc.insets = new Insets(0, 30, 0, 30); // spacing between buttons
+    gbc.weightx = 1;
+    gbc.weighty = 1;
+    gbc.gridy = 0;
+
+    // First Button
+    JButton b1 = new RoundedButton("Start Charge", true, null,
         new Color(20, 180, 50), new Color(20, 150, 50),
-        new Color(110, 110, 110)));
-    btnPanel.setOpaque(true); // To help visually debug
-    btnPanel.setBackground(Color.LIGHT_GRAY); // See if spacing shows up
-    btnPanel.add(new JButton("Test2"));
-    
+        new Color(110, 110, 110));
+    b1.setPreferredSize(new Dimension(150, 50));
+    gbc.gridx = 1;
+    btnPanel.add(b1, gbc);
+
+    // Second Button
+    JButton b2 = new RoundedButton("Stop Charge and End Session", true,
+        () -> screenHost.setActiveScreen(this.getTestScreen(screenHost, state)),
+        new Color(180, 20, 50), new Color(150, 20, 50),
+        new Color(110, 110, 110));
+    b2.setPreferredSize(new Dimension(150, 50));
+    gbc.gridx = 0;
+    btnPanel.add(b2, gbc);
     constraints.gridy = 2;
     constraints.weighty = 0.1;
 

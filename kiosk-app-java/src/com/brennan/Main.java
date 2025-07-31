@@ -30,7 +30,7 @@ public class Main {
       EVSEComunaction comunactionInterface = new ECOGInterface();
       comunactionInterface.setDataState(evseDataState);
     } catch (Exception e) {
-
+      e.printStackTrace();
     }
 
     SwingUtilities.invokeLater(() -> {
@@ -44,10 +44,10 @@ public class Main {
       Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
       screenHost.setPreferredSize(screenSize);
 
-      // screenHost.setActiveScreen(screenProvider.getTestScreen(
-      // screenHost, evseDataState));
+      screenHost.setActiveScreen(screenProvider.getTestScreen(
+      screenHost, evseDataState));
 
-      screenHost.setActiveScreen(screenProvider.getChargeStateA());
+      // screenHost.setActiveScreen(screenProvider.getChargeStateA(evseDataState));
 
       frame.setContentPane(screenHost);
       if (isDevelopmentMode) {

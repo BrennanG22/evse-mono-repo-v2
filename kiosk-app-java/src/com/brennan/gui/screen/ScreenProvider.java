@@ -28,7 +28,6 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 
 import org.apache.batik.swing.JSVGCanvas;
@@ -36,6 +35,7 @@ import org.apache.batik.swing.JSVGCanvas;
 import com.brennan.datastate.EVSEDataState;
 import com.brennan.evse.EVSECommunication;
 import com.brennan.gui.components.*;
+import com.brennan.pigpio.RFIDChecker;
 import com.formdev.flatlaf.FlatLightLaf;
 
 /*
@@ -60,6 +60,7 @@ public class ScreenProvider {
   }
 
   public Screen getTestScreen(ScreenHost screenHost, EVSEDataState state) {
+    state.rfidScanned.set(false);
     Screen panel = new Screen();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
@@ -78,7 +79,7 @@ public class ScreenProvider {
     panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     RoundedButton btn1 = new RoundedButton("Test", true,
         () -> {
-          screenHost.swipeTransition(this.getVerifyScreen(state, screenHost));
+          screenHost.setActiveScreen(getVerifyScreenNew(screenHost, state));
         },
         new Color(30, 180, 50), new Color(30, 120, 50),
         new Color(70, 70, 70));
@@ -156,6 +157,10 @@ public class ScreenProvider {
   }
 
   public Screen getVerifyScreenNew(ScreenHost screenHost, EVSEDataState state) {
+    new Thread(() -> {
+      state.rfidScanned.set(RFIDChecker.isCardPresent());
+    }).start();
+
     Screen panel = new Screen();
     panel.setLayout(new GridBagLayout());
 
@@ -168,7 +173,6 @@ public class ScreenProvider {
 
     panel.add(new JLabel("Please scan your RFID and plug in your EV", SwingConstants.CENTER), constraints);
 
-
     constraints.gridy = 1;
     constraints.weighty = 0.2;
     constraints.weightx = 0.4;
@@ -180,8 +184,7 @@ public class ScreenProvider {
     leftImage.setURI(getClass().getResource("/assets/contactless.svg").toString());
 
     panel.add(leftImage, constraints);
-    
-    
+
     constraints.gridx = 2;
 
     JPanel RFIDPanel = new JPanel();
@@ -205,12 +208,19 @@ public class ScreenProvider {
 
     panel.add(RFIDPanel, constraints);
 
-
     // ----- Bottom: Buttons -----
     RoundedButton nextButton = new RoundedButton(
-        "Next", true, () -> screenHost.setActiveScreen(this.getChargeStateA(state, screenHost)),
+        "Next", false, () -> screenHost.setActiveScreen(this.getChargeStateA(state, screenHost)),
         new Color(30, 180, 50), new Color(30, 120, 50), new Color(70, 70, 70));
     nextButton.setPreferredSize(new Dimension(150, 60));
+
+    nextButton.setOnStateChange(state.verifyComplete, (value) -> {
+      if (value) {
+        nextButton.setIsActive(true);
+      } else {
+        nextButton.setIsActive(false);
+      }
+    });
 
     RoundedButton cancelButton = new RoundedButton(
         "Cancel", true,
@@ -229,7 +239,7 @@ public class ScreenProvider {
     constraints.weighty = 0.1;
 
     panel.add(btnPanel, constraints);
-    
+
     return panel;
   }
 

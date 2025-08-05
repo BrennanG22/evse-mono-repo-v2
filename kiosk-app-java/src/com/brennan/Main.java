@@ -8,6 +8,7 @@ import com.brennan.evse.ECOGInterface;
 import com.brennan.evse.EVSECommunication;
 import com.brennan.gui.screen.ScreenHost;
 import com.brennan.gui.screen.ScreenProvider;
+import com.brennan.utils.SwingObservableState;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -20,6 +21,7 @@ public class Main {
     final EVSECommunication communicationInterface;
 
     EVSECommunication tempInterface = new DummyInterface();
+    tempInterface.setDataState(evseDataState);
 
 
     try {
@@ -30,6 +32,7 @@ public class Main {
     }
 
     communicationInterface = tempInterface;
+    SwingObservableState.dataInterface = communicationInterface;
 
 
     for (String arg : args) {

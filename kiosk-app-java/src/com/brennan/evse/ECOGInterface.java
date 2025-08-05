@@ -46,10 +46,11 @@ public class ECOGInterface implements EVSECommunication {
           Tempdata temp = mapper.readValue(data.toString(), Tempdata.class);
           Evsedata.power.set(temp.power);
           Evsedata.soc.set(temp.soc);
+
         } catch (Exception e) {
           e.printStackTrace();
         }
-
+        validate();
         return Listener.super.onText(webSocket, data, last);
       }
 
@@ -109,6 +110,15 @@ public class ECOGInterface implements EVSECommunication {
   public static class Tempdata {
     public Float power;
     public int soc;
+  }
+
+  @Override
+  public void validate() {
+    if (Evsedata.rfidScanned.get() && Evsedata.evConnected.get()) {
+      Evsedata.verifyComplete.set(true);
+    } else {
+      Evsedata.verifyComplete.set(false);
+    }
   }
 
 }

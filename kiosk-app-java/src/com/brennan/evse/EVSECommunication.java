@@ -11,4 +11,6 @@ public interface EVSECommunication {
   public boolean isAuthed();
 
   public void setDataState(EVSEDataState state);
+
+  public void validate();
 }

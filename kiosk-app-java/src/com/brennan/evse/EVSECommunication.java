@@ -2,7 +2,7 @@ package com.brennan.evse;
 
 import com.brennan.datastate.EVSEDataState;
 
-public interface EVSEComunaction {
+public interface EVSECommunication {
 
   public void startCharge();
 

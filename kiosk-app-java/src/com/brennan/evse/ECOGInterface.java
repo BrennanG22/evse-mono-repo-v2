@@ -13,7 +13,7 @@ import com.brennan.datastate.EVSEDataState;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ECOGInterface implements EVSEComunaction {
+public class ECOGInterface implements EVSECommunication {
 
   public EVSEDataState Evsedata = new EVSEDataState();
 
@@ -45,6 +45,7 @@ public class ECOGInterface implements EVSEComunaction {
         try {
           Tempdata temp = mapper.readValue(data.toString(), Tempdata.class);
           Evsedata.power.set(temp.power);
+          Evsedata.soc.set(temp.soc);
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -107,6 +108,7 @@ public class ECOGInterface implements EVSEComunaction {
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Tempdata {
     public Float power;
+    public int soc;
   }
 
 }

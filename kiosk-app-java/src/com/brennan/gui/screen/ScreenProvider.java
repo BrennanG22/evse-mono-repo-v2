@@ -15,27 +15,26 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.util.concurrent.Flow;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
 
 import org.apache.batik.swing.JSVGCanvas;
 
 import com.brennan.datastate.EVSEDataState;
+import com.brennan.evse.EVSECommunication;
 import com.brennan.gui.components.*;
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -45,8 +44,10 @@ import com.formdev.flatlaf.FlatLightLaf;
 
 public class ScreenProvider {
   private BufferedImage uofaLogo;
+  private EVSECommunication communicationInterface;
 
-  public ScreenProvider() {
+  public ScreenProvider(EVSECommunication com) {
+    this.communicationInterface = com;
     try {
       URL logoURL = ScreenProvider.class.getResource("/assets/university-of-alberta-logo.png");
       if (logoURL == null) {
@@ -115,9 +116,14 @@ public class ScreenProvider {
     JPanel indicatorPanel = new JPanel(new GridLayout(1, 2, 40, 0)); // horizontal gap between images
 
     JSVGCanvas leftImage = new JSVGCanvas();
+    leftImage.setOpaque(false);
+    leftImage.setBackground(new Color(0, 0, 0, 0));
     leftImage.setURI(getClass().getResource("/assets/contactless.svg").toString());
 
-    ImagePanel rightImage = new ImagePanel("/assets/electric_car.svg");
+    JSVGCanvas rightImage = new JSVGCanvas();
+    rightImage.setOpaque(false);
+    rightImage.setBackground(new Color(0, 0, 0, 0));
+    rightImage.setURI(getClass().getResource("/assets/electric_car.svg").toString());
 
     indicatorPanel.add(leftImage);
     indicatorPanel.add(rightImage);
@@ -149,6 +155,84 @@ public class ScreenProvider {
     return panel;
   }
 
+  public Screen getVerifyScreenNew(ScreenHost screenHost, EVSEDataState state) {
+    Screen panel = new Screen();
+    panel.setLayout(new GridBagLayout());
+
+    GridBagConstraints constraints = new GridBagConstraints();
+    constraints.gridx = 0;
+    constraints.gridy = 0;
+    constraints.gridwidth = 3;
+    constraints.weightx = 1;
+    constraints.weighty = 0.1;
+
+    panel.add(new JLabel("Please scan your RFID and plug in your EV", SwingConstants.CENTER), constraints);
+
+
+    constraints.gridy = 1;
+    constraints.weighty = 0.2;
+    constraints.weightx = 0.4;
+    constraints.gridwidth = 1;
+
+    JSVGCanvas leftImage = new JSVGCanvas();
+    leftImage.setOpaque(false);
+    leftImage.setBackground(new Color(0, 0, 0, 0));
+    leftImage.setURI(getClass().getResource("/assets/contactless.svg").toString());
+
+    panel.add(leftImage, constraints);
+    
+    
+    constraints.gridx = 2;
+
+    JPanel RFIDPanel = new JPanel();
+    RFIDPanel.setLayout(new BoxLayout(RFIDPanel, BoxLayout.Y_AXIS));
+
+    JSVGCanvas rightImage = new JSVGCanvas();
+    rightImage.setOpaque(false);
+    rightImage.setBackground(new Color(0, 0, 0, 0));
+    rightImage.setURI(getClass().getResource("/assets/electric_car.svg").toString());
+
+    panel.add(rightImage, constraints);
+
+    RFIDPanel.add(new JLabel("RFID"));
+
+    constraints.weighty = 0.4;
+    constraints.weightx = 0.4;
+    constraints.gridx = 0;
+    constraints.gridy = 2;
+
+    RFIDPanel.setBorder(new MatteBorder(0, 0, 0, 2, Color.LIGHT_GRAY));
+
+    panel.add(RFIDPanel, constraints);
+
+
+    // ----- Bottom: Buttons -----
+    RoundedButton nextButton = new RoundedButton(
+        "Next", true, () -> screenHost.setActiveScreen(this.getChargeStateA(state, screenHost)),
+        new Color(30, 180, 50), new Color(30, 120, 50), new Color(70, 70, 70));
+    nextButton.setPreferredSize(new Dimension(150, 60));
+
+    RoundedButton cancelButton = new RoundedButton(
+        "Cancel", true,
+        () -> screenHost.swipeTransition(this.getTestScreen(screenHost, state)),
+        new Color(180, 30, 50), new Color(120, 30, 50), new Color(70, 70, 70));
+    cancelButton.setPreferredSize(new Dimension(150, 60));
+
+    JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 10)); // spacing between buttons
+    btnPanel.add(cancelButton);
+    btnPanel.add(nextButton);
+
+    constraints.gridwidth = 3;
+    constraints.gridy = 3;
+    constraints.gridx = 0;
+    constraints.weightx = 1;
+    constraints.weighty = 0.1;
+
+    panel.add(btnPanel, constraints);
+    
+    return panel;
+  }
+
   public Screen getChargeStateScreen(EVSEDataState state) {
 
     try {
@@ -163,7 +247,7 @@ public class ScreenProvider {
     root.setBorder(new EmptyBorder(20, 20, 20, 20));
 
     // SOC Progress Circle Area
-    root.add(RoundProgressBar.createSOCSection());
+    // root.add(RoundProgressBar.createSOCSection());
 
     // Three-column metrics section
     root.add(createMetricsRow(state));
@@ -189,15 +273,37 @@ public class ScreenProvider {
     constraints.anchor = GridBagConstraints.CENTER;
     constraints.fill = GridBagConstraints.HORIZONTAL;
 
-    mainPanel.add(RoundProgressBar.createSOCSection(), constraints);
+    mainPanel.add(RoundProgressBar.createSOCSection(state.soc), constraints);
 
-    JPanel statsPanel = new JPanel(new GridLayout(1, 3, 5 , 0));
+    JPanel statsPanel = new JPanel(new GridLayout(1, 3, 5, 0));
 
-    JPanel statsBoxA = new JPanel(new BorderLayout());
+    JPanel statsBoxA = new JPanel(new GridBagLayout());
     JPanel statsBoxB = new JPanel(new GridBagLayout());
     JPanel statsBoxC = new JPanel(new GridLayout(2, 1));
 
-    statsBoxA.add(new JLabel("Connection"));
+    statsBoxA.setBackground(new Color(245, 245, 245));
+    GridBagConstraints boxAConstraints = new GridBagConstraints();
+    boxAConstraints.fill = GridBagConstraints.HORIZONTAL;
+    boxAConstraints.gridx = 1;
+    boxAConstraints.gridheight = 1;
+    boxAConstraints.gridwidth = 1;
+    boxAConstraints.gridy = 0;
+    boxAConstraints.weightx = 1;
+    boxAConstraints.weighty = 0.2;
+
+    statsBoxA.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+        new EmptyBorder(2, 10, 2, 10)));
+
+    statsBoxA.add(new JLabel("Connection", SwingConstants.CENTER), boxAConstraints);
+
+    boxAConstraints.gridy = 1;
+    boxAConstraints.weighty = 0.4;
+
+    statsBoxA.add(new JLabel("EVSE Interface: OK"), boxAConstraints);
+
+    boxAConstraints.gridy = 2;
+
+    statsBoxA.add(new JLabel("RFID Interface: OK"), boxAConstraints);
 
     GridBagConstraints temp = new GridBagConstraints();
     temp.fill = GridBagConstraints.HORIZONTAL;
@@ -248,7 +354,10 @@ public class ScreenProvider {
     gbc.gridy = 0;
 
     // First Button
-    JButton b1 = new RoundedButton("Start Charge", true, null,
+    JButton b1 = new RoundedButton("Start Charge", true,
+        () -> {
+          communicationInterface.startCharge();
+        },
         new Color(20, 180, 50), new Color(20, 150, 50),
         new Color(110, 110, 110));
     b1.setPreferredSize(new Dimension(150, 50));
@@ -257,7 +366,10 @@ public class ScreenProvider {
 
     // Second Button
     JButton b2 = new RoundedButton("Stop Charge and End Session", true,
-        () -> screenHost.setActiveScreen(this.getTestScreen(screenHost, state)),
+        () -> {
+          screenHost.setActiveScreen(this.getTestScreen(screenHost, state));
+          communicationInterface.stopCharge();
+        },
         new Color(180, 20, 50), new Color(150, 20, 50),
         new Color(110, 110, 110));
     b2.setPreferredSize(new Dimension(150, 50));

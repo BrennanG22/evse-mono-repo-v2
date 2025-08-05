@@ -3,8 +3,9 @@ package com.brennan;
 import javax.swing.*;
 
 import com.brennan.datastate.EVSEDataState;
+import com.brennan.evse.DummyInterface;
 import com.brennan.evse.ECOGInterface;
-import com.brennan.evse.EVSEComunaction;
+import com.brennan.evse.EVSECommunication;
 import com.brennan.gui.screen.ScreenHost;
 import com.brennan.gui.screen.ScreenProvider;
 
@@ -16,6 +17,20 @@ public class Main {
   public static void main(String[] args) {
     EVSEDataState evseDataState = new EVSEDataState();
     boolean devModeFlag = false;
+    final EVSECommunication communicationInterface;
+
+    EVSECommunication tempInterface = new DummyInterface();
+
+
+    try {
+      tempInterface = new ECOGInterface();
+      tempInterface.setDataState(evseDataState);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    communicationInterface = tempInterface;
+
 
     for (String arg : args) {
       if ("--debug".equals(arg)) {
@@ -26,16 +41,9 @@ public class Main {
 
     final boolean isDevelopmentMode = devModeFlag;
 
-    try {
-      EVSEComunaction comunactionInterface = new ECOGInterface();
-      comunactionInterface.setDataState(evseDataState);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
     SwingUtilities.invokeLater(() -> {
 
-      ScreenProvider screenProvider = new ScreenProvider();
+      ScreenProvider screenProvider = new ScreenProvider(communicationInterface);
       JFrame frame = new JFrame("Modern Swing UI");
       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -44,10 +52,10 @@ public class Main {
       Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
       screenHost.setPreferredSize(screenSize);
 
-      screenHost.setActiveScreen(screenProvider.getTestScreen(
-      screenHost, evseDataState));
+      // screenHost.setActiveScreen(screenProvider.getTestScreen(
+      //     screenHost, evseDataState));
 
-      // screenHost.setActiveScreen(screenProvider.getChargeStateA(evseDataState));
+      screenHost.setActiveScreen(screenProvider.getVerifyScreenNew(screenHost, evseDataState));
 
       frame.setContentPane(screenHost);
       if (isDevelopmentMode) {

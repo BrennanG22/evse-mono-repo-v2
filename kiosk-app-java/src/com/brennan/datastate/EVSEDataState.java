@@ -9,4 +9,6 @@ public class EVSEDataState {
   public SwingObservableState<Float> voltage = new SwingObservableState<Float>(null);
   public SwingObservableState<Float> current = new SwingObservableState<Float>(null);
 
+  public SwingObservableState<Integer> soc = new SwingObservableState<Integer>(null);
+
 }

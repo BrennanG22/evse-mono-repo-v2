@@ -7,6 +7,7 @@ import javax.swing.*;
 public class ScreenHost extends JPanel {
   private Screen activeScreen = null;
 
+
   public ScreenHost() {
     setLayout(new BorderLayout());
     setBounds(0, 0, getWidth(), getHeight());

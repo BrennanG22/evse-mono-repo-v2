@@ -7,7 +7,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.WebSocket;
 import java.net.http.WebSocket.Listener;
-import java.util.concurrent.CompletionStage;
+import java.time.Duration;
+import java.util.concurrent.*;
 
 import com.brennan.datastate.EVSEDataState;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -17,69 +18,91 @@ public class ECOGInterface implements EVSECommunication {
 
   public EVSEDataState Evsedata = new EVSEDataState();
 
-  final String WSURI = "ws://localhost:8080";
+  private static final String WSURI = "ws://10.20.27.100/api/outlets/ccs/statestream";
+  private static final int RETRY_INTERVAL_SECONDS = 10;
 
-  HttpClient client;
-  WebSocket webSocket;
+  private final HttpClient client;
+  private WebSocket webSocket;
+  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
   public ECOGInterface() {
-    // TODO add a websocket helper for auto rejoin
     client = HttpClient.newHttpClient();
-    webSocket = client.newWebSocketBuilder().buildAsync(URI.create(WSURI), new Listener() {
-      @Override
-      public void onOpen(WebSocket webSocket) {
-        String json = """
-            {
-              "command":"register",
-              "data":"random"
-            }
-            """.replaceAll("\\s+", ""); // Optional: only if the server is sensitive
-        webSocket.sendText(json, true);
-        System.out.println("Connected");
-        Listener.super.onOpen(webSocket);
-      }
+    connectWebSocket();
+  }
 
-      @Override
-      public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-          Tempdata temp = mapper.readValue(data.toString(), Tempdata.class);
-          Evsedata.power.set(temp.power);
-          Evsedata.soc.set(temp.soc);
+  private void connectWebSocket() {
+    System.out.println("Attempting to connect WebSocket...");
+    client.newWebSocketBuilder()
+      .connectTimeout(Duration.ofSeconds(5))
+      .buildAsync(URI.create(WSURI), new Listener() {
 
-        } catch (Exception e) {
-          e.printStackTrace();
+        @Override
+        public void onOpen(WebSocket webSocket) {
+          ECOGInterface.this.webSocket = webSocket;
+          System.out.println("WebSocket connected.");
+
+          String json = """
+              {
+                "command":"register",
+                "data":"random"
+              }
+              """.replaceAll("\\s+", "");
+
+          webSocket.sendText(json, true);
+          Listener.super.onOpen(webSocket);
         }
-        validate();
-        return Listener.super.onText(webSocket, data, last);
-      }
 
-      @Override
-      public void onError(WebSocket webSocket, Throwable error) {
-        error.printStackTrace();
-      }
+        @Override
+        public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+          ObjectMapper mapper = new ObjectMapper();
+          try {
+            Tempdata temp = mapper.readValue(data.toString(), Tempdata.class);
+            Evsedata.voltage.set(temp.pv);
+            Evsedata.current.set(temp.pc);
+            Evsedata.soc.set(temp.soc);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+          validate();
+          return Listener.super.onText(webSocket, data, last);
+        }
 
-      @Override
-      public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-        System.out.println("Closed: " + statusCode + " - " + reason);
-        return Listener.super.onClose(webSocket, statusCode, reason);
-      }
-    }).join();
+        @Override
+        public void onError(WebSocket webSocket, Throwable error) {
+          System.err.println("WebSocket error occurred:");
+          error.printStackTrace();
+          retryConnection();
+        }
 
+        @Override
+        public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+          System.out.printf("WebSocket closed: %d - %s%n", statusCode, reason);
+          retryConnection();
+          return Listener.super.onClose(webSocket, statusCode, reason);
+        }
+      }).exceptionally(ex -> {
+        System.err.println("Initial WebSocket connection failed:");
+        ex.printStackTrace();
+        retryConnection();
+        return null;
+      });
+  }
+
+  private void retryConnection() {
+    scheduler.schedule(this::connectWebSocket, RETRY_INTERVAL_SECONDS, TimeUnit.SECONDS);
   }
 
   public void startCharge() {
-
     String bodyJSON = """
         {
           "user": "controller",
           "auth": true,
           "plug_type": "ccs"
         }
-          """;
+        """;
 
     HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create("http://localhost:3000/api/auth?outlet=ccs"))
+        .uri(URI.create("http://10.20.27.100/api/auth?outlet=ccs"))
         .header("Content-Type", "application/json")
         .POST(HttpRequest.BodyPublishers.ofString(bodyJSON))
         .build();
@@ -89,16 +112,31 @@ public class ECOGInterface implements EVSECommunication {
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
     }
-
   }
 
   public void stopCharge() {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'stopCharge'");
+    String bodyJSON = """
+        {
+          "user": "controller",
+          "auth": false,
+          "plug_type": "ccs"
+        }
+        """;
+
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create("http://10.20.27.100/api/auth?outlet=ccs"))
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString(bodyJSON))
+        .build();
+
+    try {
+      client.send(request, HttpResponse.BodyHandlers.discarding());
+    } catch (IOException | InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   public boolean isAuthed() {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'isAuthed'");
   }
 
@@ -108,17 +146,15 @@ public class ECOGInterface implements EVSECommunication {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Tempdata {
-    public Float power;
+    public Float pv;
+    public Float pc;
     public int soc;
   }
 
   @Override
   public void validate() {
-    if (Evsedata.rfidScanned.get() && Evsedata.evConnected.get()) {
-      Evsedata.verifyComplete.set(true);
-    } else {
-      Evsedata.verifyComplete.set(false);
-    }
+    Evsedata.verifyComplete.set(
+      Evsedata.rfidScanned.get() && Evsedata.evConnected.get()
+    );
   }
-
 }

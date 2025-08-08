@@ -1,7 +1,7 @@
 import webSocketHelper from "./helpers/webSocketHelper.js";
 import { SendCommandData, SocketEVSEData } from "./main.js";
 
-const ECOG_URL: string = "test";
+const ECOG_URL: string = "http://10.0.27.100";
 
 
 export default class ECOGInterface {

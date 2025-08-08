@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
-import FullscreenDropdown from './fullScreenDropdown.tsx'
 
 import AuthApplet from './applets/authApplet.tsx';
 import StatsApplet from './applets/statsApplet.tsx';
 import webSocketHelper from './helper/webSocketHelper.ts';
+import IdleApplet from './applets/idleApplet.tsx';
 
 export type SocketEVSEData = {
   CanStartCharge: boolean;
@@ -35,7 +35,7 @@ function App() {
 
   const [socketEVSEData, setSocketEVSEData] = useState<SocketEVSEData>();
 
-  const [idleVisible, setIdleVisible] = useState<boolean>(true);
+  // const [idleVisible, setIdleVisible] = useState<boolean>(true);
 
   const socketRef = useRef<webSocketHelper>(new webSocketHelper(URL, setStreamedDataCallback));
   // const [idleAnimating, setIdleAnimating] = useState<boolean>(false);
@@ -52,9 +52,22 @@ function App() {
     if (requestedUserState === -1) {
       return;
     }
-    //Check for state transition
-    if (requestedUserState == 0) {
-      idleOpen();
+    if (requestedUserState === 0) {
+      try {
+        socketRef.current.sendCommand("serverCommand", "resetSession");
+      }
+      catch {
+
+      }
+    }
+    if (requestedUserState === 1) {
+      try {
+        socketRef.current.sendCommand("serverCommand", "resetSession");
+        socketRef.current.sendCommand("rfidCommand", "readRFID");
+      }
+      catch {
+
+      }
     }
     setUserState(requestedUserState);
     setRequestedUserState(-1);
@@ -77,23 +90,23 @@ function App() {
   }
 
 
-  function idleClose() {
-    setIdleVisible(false);
-    setUserState(1);
-  }
+  // function idleClose() {
+  //   setIdleVisible(false);
+  //   setUserState(1);
+  // }
 
-  function idleOpen() {
-    setIdleVisible(true);
-    setUserState(0);
-  }
+  // function idleOpen() {
+  //   setIdleVisible(true);
+  //   setUserState(0);
+  // }
   return (
     <div className='flex full-screen-div items-center justify-center'>
       <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
 
-      <FullscreenDropdown visible={idleVisible} onClose={idleClose} setAnimating={(state: boolean) => { state }} />
-
+      {/* <FullscreenDropdown visible={idleVisible} onClose={idleClose} setAnimating={(state: boolean) => { state }} /> */}
+      {userState == 0 && <IdleApplet onCloseCallback={() => setRequestedUserState(1)} />}
       {userState == 1 && <AuthApplet data={socketEVSEData} setStateHook={(state: number) => { setRequestedUserState(state) }} />}
-      {userState == 2 && <StatsApplet data={socketEVSEData} onCloseHook={idleOpen} onStartHook={() => { socketRef.current.sendCommand("evseCommand", "startCharge") }} />}
+      {userState == 2 && <StatsApplet data={socketEVSEData} onCloseHook={() => setRequestedUserState(0)} onStartHook={() => { socketRef.current.sendCommand("evseCommand", "startCharge") }} />}
     </div>
   )
 }

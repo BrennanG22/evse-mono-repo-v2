@@ -1,0 +1,15 @@
+[Unit]
+Description=RFID and Docker Startup Tasks
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/elite
+ExecStart=/bin/bash -c '/home/elite/rfid-env/bin/python main.py & docker compose -f compose.arm.yaml up'
+Restart=always
+User=elite
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target

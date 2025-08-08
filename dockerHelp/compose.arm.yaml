@@ -3,22 +3,33 @@ services:
     platform: linux/arm/v7
     build: 
       context: ../kiosk-server/.
+      args:
+        TARGETARCH: arm
+        TARGETVARIANT: v7
     image: jbgiroux/kiosk-app:arm-v7
     container_name: kiosk-app-test
     ports:
       - "3000:3000"
     networks:
       - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   translation-layer:
     platform: linux/arm/v7
-    build: ../translation-layer/.
+    build:
+      context: ../translation-layer/.
+      args:
+        TARGETARCH: arm
+        TARGETVARIANT: v7
     image: jbgiroux/translation-layer-ecog:arm-v7
     container_name: translation-layer-test
     ports:
       - "8080:8080"
     networks:
       - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   app-network:

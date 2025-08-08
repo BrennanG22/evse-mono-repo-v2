@@ -44,6 +44,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 
 public class ScreenProvider {
   private BufferedImage uofaLogo;
+  private BufferedImage eliteGridLogo;
   private EVSECommunication communicationInterface;
 
   public ScreenProvider(EVSECommunication com) {
@@ -54,8 +55,14 @@ public class ScreenProvider {
         throw new IllegalStateException("Image not found: /assets/university-of-alberta-logo.png");
       }
       uofaLogo = ImageIO.read(logoURL);
+
+      URL eliteLogoURL = ScreenProvider.class.getResource("/assets/ELITELabLogo.png");
+      if (eliteLogoURL == null){
+        throw new IllegalStateException("Image not found: /assets/ELITELabLogo.png");
+      }
+      eliteGridLogo = ImageIO.read(eliteLogoURL);
     } catch (IOException e) {
-      throw new RuntimeException("Failed to load university logo", e);
+      throw new RuntimeException("Failed to load an image", e);
     }
   }
 
@@ -71,6 +78,14 @@ public class ScreenProvider {
     outer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     outer.add(logo);
     panel.add(outer);
+
+    JPanel outera = new JPanel();
+    outera.setLayout(new BorderLayout());
+    JPanel eliteLogo = new ImagePanel(eliteGridLogo);
+    outera.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    outera.add(eliteLogo);
+    panel.add(outera);
+
 
     JPanel btnPanel = new JPanel();
     btnPanel.setLayout(new GridLayout(0, 2));
@@ -224,7 +239,7 @@ public class ScreenProvider {
 
     RoundedButton cancelButton = new RoundedButton(
         "Cancel", true,
-        () -> screenHost.swipeTransition(this.getTestScreen(screenHost, state)),
+        () -> screenHost.setActiveScreen(this.getTestScreen(screenHost, state)),
         new Color(180, 30, 50), new Color(120, 30, 50), new Color(70, 70, 70));
     cancelButton.setPreferredSize(new Dimension(150, 60));
 

@@ -1,5 +1,8 @@
 import ECOGInterface from "./ecogInterface.js";
+import RFIDInterface from "./rfidInterface.js";
 import ServerInterface from "./ServerInterface.js";
+
+import { WebSocketServer, WebSocket } from "ws";
 
 export type SocketEVSEData = {
   CanStartCharge: boolean;
@@ -22,9 +25,14 @@ export type SendCommandData = {
 
 
 const evseInterface = new ECOGInterface();
+const rfidInterface = new RFIDInterface();
 
-const serverInterface = new ServerInterface(sendEVSECommand);
+const serverInterface = new ServerInterface(sendEVSECommand, sendRFIDCommand);
 
 function sendEVSECommand(command: SendCommandData){
   evseInterface.sendData(command);
+}
+
+function sendRFIDCommand(command: SendCommandData, ws: WebSocket, setStatusCallback:(val: boolean)=>void){
+  rfidInterface.readCommand(command, ws, setStatusCallback);
 }

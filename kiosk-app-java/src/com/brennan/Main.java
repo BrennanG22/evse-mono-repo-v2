@@ -24,12 +24,12 @@ public class Main {
     tempInterface.setDataState(evseDataState);
 
 
-    try {
-      tempInterface = new ECOGInterface();
-      tempInterface.setDataState(evseDataState);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    // try {
+    //   tempInterface = new ECOGInterface();
+    //   tempInterface.setDataState(evseDataState);
+    // } catch (Exception e) {
+    //   e.printStackTrace();
+    // }
 
     communicationInterface = tempInterface;
     SwingObservableState.dataInterface = communicationInterface;
@@ -55,10 +55,10 @@ public class Main {
       Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
       screenHost.setPreferredSize(screenSize);
 
-      // screenHost.setActiveScreen(screenProvider.getTestScreen(
-      //     screenHost, evseDataState));
+      screenHost.setActiveScreen(screenProvider.getTestScreen(
+          screenHost, evseDataState));
 
-      screenHost.setActiveScreen(screenProvider.getVerifyScreenNew(screenHost, evseDataState));
+      // screenHost.setActiveScreen(screenProvider.getVerifyScreenNew(screenHost, evseDataState));
 
       frame.setContentPane(screenHost);
       if (isDevelopmentMode) {
